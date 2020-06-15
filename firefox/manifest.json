@@ -13,7 +13,8 @@
 		}
 	],
 	"permissions":[
-		"contextMenus"
+		"contextMenus",
+		"downloads"
 	],
 	"background": {
 	  	"scripts": ["background.js"]
