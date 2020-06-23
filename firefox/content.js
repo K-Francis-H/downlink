@@ -5,13 +5,13 @@ const ORIGIN = document.location.origin;
 
 const DOMAIN_REGEX = new RegExp("^"+ORIGIN+".+", "g");
 const IMAGES_REGEX = /\.(gif|jpe?g|tiff|png|webp|bmp|ico|svg|ai|eps)$/i
-const VIDEOS_REGEX = /\.(mp4|m4p|m4v|mpg|webm|avi|wmv|mov|qt|flv|swf)$/i
-const AUDIO_REGEX = /\.(mp3|wav|wma|ogg|flac|midi?|m4a|pcast|mpa|aiff?)$/i
+const VIDEOS_REGEX = /\.(mp4|m4p|m4v|mpg|webm|avi|wmv|mov|qt|flv|swf|mkv)$/i
+const AUDIO_REGEX = /\.(mp3|wav|wma|ogg|flac|midi?|m4a|pcast|mpa|aiff?|caf)$/i
 const DOCUMENT_REGEX = /\.(docx?|xlsx?|pdf|mobi|epub|awz|txt|rtf|odt)$/i
 
 //go thru links and add to the context menu an option to make a wget list, or download all links on current domain, probably pop a menu
 
-console.log("content,js on: "+ORIGIN+PATH);
+console.log("content.js on: "+ORIGIN+PATH);
 
 //let port = browser.runtime.connect();
 
@@ -22,21 +22,25 @@ browser.runtime.onConnect.addListener(function(port){
 		//alert("msg recieved");
 		//only one type currently so make link list
 		let regex = DOMAIN_REGEX;
+		let all = "";
 		switch(msg.action){
 			case "domain":
-				regex = DOMAIN_REGEX;
+				all += generateLinkList(DOMAIN_REGEX, msg.newline);
 				break;
 			case "images":
-				regex = IMAGES_REGEX;
+				all += generateLinkList(IMAGES_REGEX, msg.newline);
+				all += getImageSources(msg.newline);
 				break;
 			case "videos":
-				regex = VIDEOS_REGEX;
+				all += generateLinkList(VIDEOS_REGEX, msg.newline);
+				all += getMediaSources("VIDEO", msg.newline);
 				break;
 			case "audio":
-				regex = AUDIO_REGEX;
+				all += generateLinkList(AUDIO_REGEX, msg.newline);
+				all += getMediaSources("AUDIO", msg.newline);
 				break;
 			case "documents":
-				regex = DOCUMENT_REGEX;
+				all += generateLinkList(DOCUMENT_REGEX, msg.newline);
 				break;
 			case "custom":
 			default:
@@ -44,7 +48,10 @@ browser.runtime.onConnect.addListener(function(port){
 				break;
 		}
 		port.postMessage(msg);
-		generateLinkList(regex, msg.newline);
+		//generateLinkList(regex, msg.newline);
+
+		//reorder functions to create list in memory, concat with others, combine here and offer download
+		createTextDownload(all);
 	});
 	console.log("connection recieved!");
 });
@@ -79,7 +86,12 @@ function generateLinkList(pattern, newline){
 		list += uniqueLinks[i]+newline;
 	}
 
-	createTextDownload(list);
+	//getMediaSources("AUDIO", newline);
+	//getMediaSources("VIDEO");
+
+	//createTextDownload(list);
+
+	return list;
 }
 
 
@@ -92,4 +104,44 @@ function createTextDownload(content){
 	document.body.removeChild(a);
 }
 
+function getMediaSources(tagName, newline){
+	let tags = document.getElementsByTagName(tagName);
+	let sources = [];
+	let links = "";
 
+	console.log(tags);
+	for(let i=0; i < tags.length; i++){
+		//sources.concat(tags[i].children);
+		let ch = tags[i].children;
+		for(let j=0; j < ch.length; j++){
+			if(ch[j].tagName === "SOURCE"){
+				console.log(ch[j].src);
+				links += ch[j].src + newline;
+			}
+		}
+	}
+	return links;
+}
+
+function getImageSources(newline){
+	let imgs = document.getElementsByTagName("IMG");
+	let links = "";
+	
+	for(let i=0; i < imgs.length; i++){
+		links += imgs[i].src + newline;
+	}
+	return links;
+}
+/*
+function getAudioSources(){
+	let audioTags = document.getElementsByTagName("AUDIO");
+	//TODO some may be in frames as well
+	let sources = 	
+}
+
+function getVideoSources(){
+	let videoTags = document.getElementsByTagName("VIDEO");
+	//TODO may be in frames as well
+}
+
+*/
