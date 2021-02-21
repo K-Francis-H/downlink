@@ -8,6 +8,7 @@ const IMAGES_REGEX = /\.(gif|jpe?g|tiff|png|webp|bmp|ico|svg|ai|eps)$/i
 const VIDEOS_REGEX = /\.(mp4|m4p|m4v|mpg|webm|avi|wmv|mov|qt|flv|swf|mkv)$/i
 const AUDIO_REGEX = /\.(mp3|wav|wma|ogg|flac|midi?|m4a|pcast|mpa|aiff?|caf)$/i
 const DOCUMENT_REGEX = /\.(docx?|xlsx?|pdf|mobi|epub|awz|txt|rtf|odt)$/i
+const ZIP_REGEX = /\.(zip|7z|rar|tar|tar\.gz|gzip|bz2|gz|s7z)$/i //probably way more of these
 
 //go thru links and add to the context menu an option to make a wget list, or download all links on current domain, probably pop a menu
 
@@ -42,9 +43,26 @@ browser.runtime.onConnect.addListener(function(port){
 			case "documents":
 				all += generateLinkList(DOCUMENT_REGEX, msg.newline);
 				break;
+			case "archives":
+				all += generateLinkList(ZIP_REGEX, msg.newline);
+				break;
 			case "custom":
+				let customRegex = prompt("Enter Custom Regex")
+				console.log(customRegex)
+				console.log(customRegex !== null)
+				re = new RegExp(customRegex, 'g');
+				console.log(re);
+				//if(customRegex !== null && customRegex !== undefined){
+					all += fullBodySearch(re, msg.newline);
+				//}else{
+				//	return;
+				//}
+				console.log(fullBodySearch(customRegex, msg.newline));
+				console.log(all);
+				break;
 			default:
 				//TODO
+				return;
 				break;
 		}
 		port.postMessage(msg);
@@ -55,6 +73,17 @@ browser.runtime.onConnect.addListener(function(port){
 	});
 	console.log("connection recieved!");
 });
+
+function fullBodySearch(pattern, newline){
+	console.log("fullBodySearch(): "+pattern);
+	let matches = document.body.innerHTML.match(pattern);
+	console.log(matches);
+	/*let list = "";
+	for(let i=0; i < matches.length; i++){
+		list += matches[i]+newLine;
+	}*/
+	return matches.join(newline) + newline; //last newline so using cat works to combine later
+}
 
 
 //newline param for win vs unix like systems

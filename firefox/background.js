@@ -65,6 +65,12 @@ browser.contextMenus.create({
 });
 
 browser.contextMenus.create({
+	id: "archive",
+	title: "Get All Archives/Compressed Folders",
+	contexts: ["all"]
+});
+
+browser.contextMenus.create({
 	id: "custom",
 	title: "Custom",
 	contexts: ["all"]
@@ -89,6 +95,9 @@ browser.contextMenus.onClicked.addListener(function(info, tab){
 			break;
 		case "documents":
 			handleArchiveRequest("documents", port);
+			break;
+		case "archive":
+			handleArchiveRequest("archive", port);
 			break;
 		case "custom":
 			handleArchiveRequest("custom", port);
